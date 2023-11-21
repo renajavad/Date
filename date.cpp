@@ -1,126 +1,152 @@
 #include <iostream>
+
+struct WrongDayException            //Add Struct Wrong Exception
+{
+	int day;
+};
+struct WrongMonthException
+{
+	int month;
+};
+struct WrongYearException
+{
+	int year;
+};
+
 class Date 
 {
 	private:
-		int years;
-		int months;
-		int days;
-		void Normalize()
-		{
-			int day[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-			if( months == 2 )
-			{
-				if( (years % 4 == 0 && years % 100 != 0) || (years % 400 ==0) )
-				{
-					day[1] = 29;
-				}
-			}
-
-			while( days > day[months-1] )
-			{
-				days -= day[months-1];
-				if( months == 12 )
-				{
-					++years;
-					months = 1;
-				}
-				else 
-				{
-					++months;
-				}
-			}
-			while( days <= 0 )
-			{
-				if( months == 1 )
-				{
-					--years;
-					months = 12;
-				}
-				else 
-				{
-					--months;
-				}
-				days += day[months-1];
-			}			
-};
+		int day;
+		int month;
+		int year;
+		
 	public:
-		Date( int y, int m, int d );
-		Date( int d ): Date( 0, 0, d)
+		Date( int d, int m, int y )
 		{
+			int days[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+				if( (y % 4 == 0 && y % 100 != 0) || (y % 400 ==0) )
+				{
+					days[1] = 29;
+				}
+				if( d <= 0 || d > days[m] )
+				{
+					throw WrongDayException(d);        //Add throw WrongException
+				}
+				if( m <= 0 || m > 12 )
+				{
+					throw WrongMonthException(m);
+				}
+				if( y <= 0 )
+				{
+					throw WrongYearException(y);
+				}
+				day = d;
+				month = m;
+				year = y;
 		}
-		int GetYears() const;
+
+		Date( int d ): Date( d, 1, 1 )
+		{
+			int days[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+			if( day <= 0 || day > days[month] )
+				{
+					throw WrongDayException(d);
+				}
+		}
+
+		int GetDay() const;
 		int GetMonth() const;
-		int GetDays() const;
+		int GetYear() const;
+
 		Date& operator += ( int d )
 		{
-			days +=d;
-			Normalize();
+			day +=d;
+			Date( day, month, year);
 			return *this;
 		}
 		Date operator+ ( int d ) const
 		{
-			return Date( years, months, days+d );
+			return Date( day+d, month, year );
 		}
 		Date operator- ( int d ) const
 		{
-			return Date( years, months, days-d );
+			return Date( day-d, month, year );
 		}
-		void AddDays( int d ) 
+
+		void AddDay( int d ) 
 		{
-			days += d;
-			Normalize();
+			day += d;
+			Date( day, month, year);
 		}
-		void MinusDays( int d )
+		void MinusDay( int d )
 		{
-			days-=d;
-			Normalize();
+			day-=d;
+			Date( day, month, year);
 		}
 };
 
-	Date::Date( int y, int m, int d)
+	int Date::GetDay() const
 	{
-		years = y;
-		months = m;
-		days = d;
-		Normalize();
-	}
-	int Date::GetYears() const
-	{
-		return years;
+		return day;
 	}
 	int Date::GetMonth() const
 	{
-		return months;
+		return month;
 	}
-	int Date::GetDays() const
+	int Date::GetYear() const
 	{
-		return days;
+		return year;
 	}
 	
 	std::ostream& operator << ( std::ostream& out, const Date& d ) 
 	{
-		out << d.GetYears() << ":" << d.GetMonth() << ":" << d.GetDays();
+		out << d.GetDay() << "." << d.GetMonth() << "." << d.GetYear();
 		return out;
 	}
 	std::istream& operator >> ( std::istream& in, Date& d )
 	{
-		int yin, min, din;
+		std::cin.exceptions(std::istream::failbit);
+		int din;
+		int min;
+		int yin;
 		char c;
-		in >> yin >> c;
-		in >> min >> c;
 		in >> din >> c;
-		d = Date( yin, min, din);
+		in >> min >> c;
+		in >> yin >> c;
+		d = Date( din, min, yin);
 		return in;
 	}
 	
-int main()
+int main() 
 {
-	Date d( 2024, 2, 3);
-	std::cout << "Date: " << d <<"\n" ;
-	d.AddDays(40);
-	std::cout << "Add days: " << d <<"\n" ;
-	d.MinusDays(3);
-	std::cout << "Minus days: " << d <<"\n" ;
+	try					      //Add try-catch
+		{
+			Date d( 3, 2, 2024);
+		}
+		catch( const WrongDayException& day)
+		{
+			std::cerr << "Wrong day " << "\n";
+			return 1;
+		}
+		catch( const WrongMonthException& month)
+		{
+			std::cerr << "Wrong month " << "\n";
+			return 1;
+		}
+		catch( const WrongYearException& year)
+		{
+			std::cerr << "Wrong year " << "\n";
+			return 1;
+		}
+		catch( const std::istream::failure& ex )
+		{
+			std::cerr << "Failed to read data: " << ex.what() << "\n";
+		}
+		catch(...)
+		{
+			std::cerr << "Other failure" << "\n";
+		}
+		return 0;
 }		
 
 	
